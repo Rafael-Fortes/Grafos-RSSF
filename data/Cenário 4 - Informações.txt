@@ -1,0 +1,9 @@
+CENÁRIO 4: Roteamento em Redes de Sensores Sem Fio
+
+- Cada arquivo representa uma RSSF com uma determinada quantidade de nós sensores (motes) sendo quatro no total (50, 100, 200 e 400 motes). 
+- Os motes estão distribuídos em uma área de 1000 x 1000 metros.
+- Para informações técnicas a respeito do mote (Silvanet Wildfire) consulte seu datasheet.
+- Em cada arquivo:
+	1ª linha: quantidade de motes na rede.
+	2ª linha: coordenada (x, y) no plano cartesiano da estação rádio base (ERB). 
+	3ª linha em diante: coordenada (x, y) no plano cartesiano do mote de id 0, 1, 2, ..., n-1.
