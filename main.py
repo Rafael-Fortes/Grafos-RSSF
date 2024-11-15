@@ -79,7 +79,7 @@ class Screen:
         pygame.quit()
 
 if __name__ == "__main__":
-    qtd_sensors = 200
+    qtd_sensors = 400
     dataset_path = f"data/Cenário 4 - Rede {qtd_sensors}.txt"
 
     sensor_network = SensorNetwork()
