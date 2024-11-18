@@ -1,3 +1,5 @@
+from random import randint
+
 from typing import List, Tuple, Dict, Optional
 import math
 import heapq
@@ -13,7 +15,7 @@ class Sensor:
     def distance_to(self, other_sensor: 'Sensor') -> float:
         x1, y1 = self.position
         x2, y2 = other_sensor.position
-        euclidian_distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        euclidian_distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) # revisão
         return euclidian_distance
     
     def can_communicate_with(self, other_sensor: 'Sensor') -> bool:
@@ -55,8 +57,9 @@ class SensorNetwork:
                 sensor = Sensor(identifier=0, position=base_station_coords, range_radius=100.0, battery_capacity=float('inf'), is_base_station=True)
                 self.add_sensor(sensor)
             else:
+                baterry = randint(0, 1000)
                 x, y = map(float, line.strip().split(','))
-                sensor = Sensor(identifier=i-1, position=(x, y), range_radius=100.0, battery_capacity=1000.0)
+                sensor = Sensor(identifier=i-1, position=(x, y), range_radius=100.0, battery_capacity=baterry)
                 self.add_sensor(sensor)
         
         self.qtd_sensors = len(self.sensors)
@@ -124,27 +127,6 @@ class SensorNetwork:
                 print(f"Communication failed between Sensor {sender_id} and Sensor {receiver_id} due to insufficient battery.")
                 return None
     
-    def simulate_data_transmission(self, start_id: int, end_id: int) -> Optional[float]:
-        path = self.get_shortest_path(start_id, end_id)
-        total_energy = 0.0
-        
-        if not path:
-            print(f"No path found from sensor {start_id} to sensor {end_id}.")
-            return None
-
-        for i in range(len(path) - 1):
-            sender = path[i]
-            receiver = path[i + 1]
-
-            result = self.simulate_communication(sender, receiver, 4000)
-            if result is None:
-                print(f"Communication failed between Sensor {sender} and Sensor {receiver}.")
-                return None
-            
-            total_energy += result
-        print(f"Data successfully transmitted from sensor {start_id} to sensor {end_id}.")
-        return total_energy
-
     def dijkstra(self, start_id: int) -> Tuple[Dict[int, float], Dict[int, int]]:
         distances = {sensor_id: float('inf') for sensor_id in self.sensors}
         previous_nodes = {sensor_id: None for sensor_id in self.sensors}
@@ -182,6 +164,27 @@ class SensorNetwork:
             return path
         else:
             return []
+    
+    def simulate_data_transmission(self, start_id: int, end_id: int) -> Optional[float]:
+        path = self.get_shortest_path(start_id, end_id)
+        total_energy = 0.0
+        
+        if not path:
+            print(f"No path found from sensor {start_id} to sensor {end_id}.")
+            return None
+
+        for i in range(len(path) - 1):
+            sender = path[i]
+            receiver = path[i + 1]
+
+            result = self.simulate_communication(sender, receiver, 4000)
+            if result is None:
+                print(f"Communication failed between Sensor {sender} and Sensor {receiver}.")
+                return None
+            
+            total_energy += result
+        print(f"Data successfully transmitted from sensor {start_id} to sensor {end_id}.")
+        return total_energy
 
 
 if __name__ == "__main__":
@@ -189,8 +192,13 @@ if __name__ == "__main__":
     graph = SensorNetwork()
     graph.load_from_file(file_path)
     # graph.print_adjacency_matrices()
-    print(graph.get_shortest_path(399, 0))
-    total_energy = graph.simulate_data_transmission(399, 0)
-    print(f"Sensor 399 battery: {graph.sensors[399].battery}")
-    print(f"Sensor 0 battery: {graph.sensors[0].battery}")
-    print(f"Toal energy consumed: {total_energy}")
+
+    for i in range(1, graph.qtd_sensors):
+        start = i
+        end = 0
+
+        print(graph.get_shortest_path(start, end))
+        total_energy = graph.simulate_data_transmission(start, end)
+
+        print(f"Sensor {start} battery: {graph.sensors[start].battery}")
+        print(f"Toal energy consumed: {total_energy}")
