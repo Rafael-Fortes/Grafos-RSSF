@@ -1,4 +1,5 @@
 from random import randint
+from random import uniform
 
 from typing import List, Tuple, Dict, Optional
 import math
@@ -57,9 +58,9 @@ class SensorNetwork:
                 sensor = Sensor(identifier=0, position=base_station_coords, range_radius=100.0, battery_capacity=float('inf'), is_base_station=True)
                 self.add_sensor(sensor)
             else:
-                baterry = randint(0, 1000)
+                battery = uniform(0.0, 1.0)
                 x, y = map(float, line.strip().split(','))
-                sensor = Sensor(identifier=i-1, position=(x, y), range_radius=100.0, battery_capacity=baterry)
+                sensor = Sensor(identifier=i-1, position=(x, y), range_radius=100.0, battery_capacity=battery)
                 self.add_sensor(sensor)
         
         self.qtd_sensors = len(self.sensors)
@@ -116,6 +117,9 @@ class SensorNetwork:
         transmission_energy = self.transmission_matrix[sender_id][receiver_id]
         reception_energy = self.reception_matrix[sender_id][receiver_id]
 
+        if receiver_id not in self.sensors:
+            return None
+
         sender = self.sensors[sender_id]
         receiver = self.sensors[receiver_id]
 
@@ -151,8 +155,39 @@ class SensorNetwork:
 
         return distances, previous_nodes
 
-    def get_shortest_path(self, start_id: int, end_id: int) -> List[int]:
-        distances, previous_nodes = self.dijkstra(start_id)
+    def minimum_spanning_tree_prim(self, start_id: int = 0) -> Tuple[Dict[int, Optional[int]], float]:
+        visited = [False] * self.qtd_sensors
+        predecessors = {sensor_id: None for sensor_id in self.sensors}
+        min_edge_cost = [float('inf')] * self.qtd_sensors
+        min_edge_cost[start_id] = 0
+        total_cost = 0
+
+        priority_queue = [(0, start_id)]
+
+        while priority_queue:
+            current_cost, current_id = heapq.heappop(priority_queue)
+
+            if visited[current_id]:
+                continue
+
+            visited[current_id] = True
+            total_cost += current_cost
+
+            for neighbor_id, weight in enumerate(self.transmission_matrix[current_id]):
+                if not visited[neighbor_id] and weight < min_edge_cost[neighbor_id]:
+                    min_edge_cost[neighbor_id] = weight
+                    predecessors[neighbor_id] = current_id
+                    heapq.heappush(priority_queue, (weight, neighbor_id))
+
+        return total_cost, predecessors
+
+
+    def get_shortest_path(self, start_id: int, end_id: int, type_algorithm: str = 'dijkstra') -> List[int]:
+        if type_algorithm == 'dijkstra':
+            distances, previous_nodes = self.dijkstra(start_id)
+        
+        if type_algorithm == 'minimum_spanning_tree_prim':
+            distances, previous_nodes = self.minimum_spanning_tree_prim(start_id)
         path = []
         current_id = end_id
 
@@ -160,31 +195,108 @@ class SensorNetwork:
             path.insert(0, current_id)
             current_id = previous_nodes[current_id]
 
-        if distances[end_id] < float('inf'):
-            return path
-        else:
-            return []
+        # if distances[end_id] < float('inf'):
+        #     return path
+        # else:
+        #     return []
+        return path if path[0] == start_id else []
     
-    def simulate_data_transmission(self, start_id: int, end_id: int) -> Optional[float]:
-        path = self.get_shortest_path(start_id, end_id)
+    def simulate_data_transmission(self, start_id: int, end_id: int, type_algorithm: str = 'dijkstra') -> Optional[float]:
+        # Obtém o caminho mais curto
+        path = self.get_shortest_path(start_id, end_id, type_algorithm)
         total_energy = 0.0
         
         if not path:
             print(f"No path found from sensor {start_id} to sensor {end_id}.")
             return None
 
+        # Itera sobre o caminho, simulando a comunicação entre sensores
         for i in range(len(path) - 1):
             sender = path[i]
             receiver = path[i + 1]
 
-            result = self.simulate_communication(sender, receiver, 4000)
+            # Simula a comunicação e calcula o consumo de energia
+            result = self.simulate_communication(sender, receiver, 4000)  # Supondo que 4000 seja o tamanho dos dados
             if result is None:
                 print(f"Communication failed between Sensor {sender} and Sensor {receiver}.")
                 return None
             
+            # Atualiza o total de energia consumida
             total_energy += result
+
+            # Atualiza a energia do sensor de envio
+            self.sensors[sender].battery -= result  # Subtrai o consumo de energia do sensor sender
+
+            # Verifica se o sensor ficou sem energia
+            if self.sensors[sender].battery <= 0:
+                return None  
+
+        # Se todos os sensores estiverem bem, retorna o total de energia consumida
         print(f"Data successfully transmitted from sensor {start_id} to sensor {end_id}.")
         return total_energy
+
+    
+    def select_random_sensor(self) -> int:
+        sensor_ids = list(self.sensors.keys())
+        sensor_ids.remove(0)
+        return sensor_ids[randint(0, len(sensor_ids) - 1)]
+
+    def run_simulation_agm(self, max_rounds: int = 400, algorithm: str = 'minimum_spanning_tree_prim'):
+        for round_num in range(max_rounds):
+            print(f"\n--- Round {round_num + 1} ---")
+
+            start_sensor = self.select_random_sensor()
+            end_sensor = 0
+
+            path = self.get_shortest_path(start_sensor, end_sensor, algorithm)
+            if not path:
+                print("No path found. Rebuilding the network...")
+                _, _ = self.minimum_spanning_tree_prim()
+                continue
+
+            total_energy = self.simulate_data_transmission(start_sensor, end_sensor, algorithm)
+
+            if total_energy is None:
+                print("Energy depleted on one or more sensors. Rebuilding the network...")
+                self.remove_depleted_sensors()
+                _, _ = self.minimum_spanning_tree_prim()
+            else:
+                print(f"Round {round_num + 1} completed successfully.")
+                print(f"total energy: {total_energy}")
+                print(f"path: {path}")
+        
+    def run_simulation_djikstra(self, algorithm: str = 'dijkstra'):
+        for i in range(1, self.qtd_sensors):
+            start = i
+            end = 0
+
+            print(self.get_shortest_path(start, end, algorithm))
+            total_energy = self.simulate_data_transmission(start, end, algorithm)
+
+            print(f"Sensor {start} battery: {self.sensors[start].battery}")
+            print(f"Toal energy consumed: {total_energy}")
+
+    def remove_depleted_sensors(self):
+        sensors_to_remove = []
+
+        # Identificar sensores com bateria esgotada
+        for sensor_id, sensor in self.sensors.items():
+            if sensor.battery <= 0:
+                print(f"Removing sensor {sensor_id} due to depleted battery.")
+                sensors_to_remove.append(sensor_id)
+        
+        # Remover os sensores e as arestas associadas
+        for sensor_id in sensors_to_remove:
+            # Remover o sensor da lista de sensores
+            del self.sensors[sensor_id]
+
+            # Remover as arestas associadas a este sensor na matriz de adjacência
+            for i in range(len(self.transmission_matrix)):
+                # Remover o sensor de todas as arestas que envolvem este sensor
+                self.transmission_matrix[sensor_id][i] = 0
+                self.transmission_matrix[i][sensor_id] = 0
+
+
 
 
 if __name__ == "__main__":
@@ -193,12 +305,7 @@ if __name__ == "__main__":
     graph.load_from_file(file_path)
     # graph.print_adjacency_matrices()
 
-    for i in range(1, graph.qtd_sensors):
-        start = i
-        end = 0
+    graph.run_simulation_agm()
+    #graph.run_simulation_djikstra()
 
-        print(graph.get_shortest_path(start, end))
-        total_energy = graph.simulate_data_transmission(start, end)
-
-        print(f"Sensor {start} battery: {graph.sensors[start].battery}")
-        print(f"Toal energy consumed: {total_energy}")
+    
