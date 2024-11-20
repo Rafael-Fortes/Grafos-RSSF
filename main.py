@@ -30,7 +30,7 @@ class Screen:
                 self.running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_c:
-                    self.simulation.create_new_simulation("data/Cenário 4 - Rede 400.txt", 100, "dijkstra")
+                    self.simulation.create_new_simulation("data/Cenário 4 - Rede 400.txt", 100, "minimum_spanning_tree_prim")
                 if event.key == pygame.K_SPACE:
                     self.simulation.next_step()
                 if event.key == pygame.K_DELETE:
@@ -91,7 +91,7 @@ class Screen:
                     blue = 0
             
                 sensor_color = (red, green, blue)
-                pygame.draw.circle(self.screen, sensor_color, (screen_x, screen_y), 5)
+                pygame.draw.circle(self.screen, sensor_color, (screen_x, screen_y), 10)
 
         x, y = base_station.position
         screen_x = int(round((x / 1000) * self.screen.get_width()))

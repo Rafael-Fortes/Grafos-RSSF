@@ -63,13 +63,13 @@ class SensorNetwork:
                 sensor = Sensor(identifier=0, position=base_station_coords, range_radius=100.0, battery_capacity=float('inf'), is_base_station=True)
                 self.add_sensor(sensor)
             else:
-                battery = 0.5
+                battery = 1.0
                 x, y = map(float, line.strip().split(','))
                 sensor = Sensor(identifier=i-1, position=(x, y), range_radius=100.0, battery_capacity=battery)
                 self.add_sensor(sensor)
         
         if self.qtd_sensors != len(self.sensors) - 1:
-            # print("Erro ao carregar os sensores.")
+            print("Erro ao carregar os sensores.")
             self.sensors = {}
             self.qtd_sensors = 0
             return False
@@ -107,18 +107,18 @@ class SensorNetwork:
                     self.transmission_matrix[sensor_1_id][sensor_2_id] = 0.0
                     self.reception_matrix[sensor_1_id][sensor_2_id] = 0.0
 
-    # def print_adjacency_matrices(self) -> None:
-        # print("Matriz de gasto energético para transmissão:")
+    def print_adjacency_matrices(self) -> None:
+        print("Matriz de gasto energético para transmissão:")
         for i in range(self.qtd_sensors):
             for j in range(self.qtd_sensors):
-                # print(f"{self.transmission_matrix[i][j]: .2e}", end="\t")
-            # print()
+                print(f"{self.transmission_matrix[i][j]: .2e}", end="\t")
+            print()
 
-        # print("\nMatriz de gasto energético para recepção:")
+        print("\nMatriz de gasto energético para recepção:")
         for i in range(self.qtd_sensors):
             for j in range(self.qtd_sensors):
-                # print(f"{self.reception_matrix[i][j]: .2e}", end="\t")
-            # print()
+                print(f"{self.reception_matrix[i][j]: .2e}", end="\t")
+            print()
     
         
     def simulate_communication(self, sender_id: int, receiver_id: int, k: int) -> Optional[float]:
@@ -135,10 +135,10 @@ class SensorNetwork:
         if sender.battery > transmission_energy and receiver.battery > reception_energy:
             if sender.consume_energy_for_transmission(transmission_energy) and receiver.consume_energy_for_reception(reception_energy):
                 total_energy = transmission_energy + reception_energy
-                # print(f"Comunicação realizada com sucesso entre sensor {sender_id} e o sensor {receiver_id}. Consumo total de energia: {total_energy}")
+                print(f"Comunicação realizada com sucesso entre sensor {sender_id} e o sensor {receiver_id}. Consumo total de energia: {total_energy}")
                 return total_energy
             else:
-                # print(f"Comunicação falhou entre o sensor {sender_id} e o sensor {receiver_id} por falta de bateria.")
+                print(f"Comunicação falhou entre o sensor {sender_id} e o sensor {receiver_id} por falta de bateria.")
                 return None
     
     def dijkstra(self, start_id: int) -> Tuple[Dict[int, float], Dict[int, int]]:
@@ -216,10 +216,10 @@ class SensorNetwork:
         #     return []
 
         if len(path) == 1:
-            # print(f"Sensor {start_id} e Sensor {end_id} não estão conectados.")
+            print(f"Sensor {start_id} e Sensor {end_id} não estão conectados.")
             return []
         else:
-            # print(f"Menor caminho entre Sensor {start_id} e Sensor {end_id}: {path}. Distância: {distances[end_id]}")
+            print(f"Menor caminho entre Sensor {start_id} e Sensor {end_id}: {path}. Distância: {distances[end_id]}")
             return path
     
     def simulate_data_transmission(self, start_id: int, end_id: int, path: str) -> Optional[float]:
@@ -233,7 +233,7 @@ class SensorNetwork:
             # Simula a comunicação e calcula o consumo de energia
             result = self.simulate_communication(sender, receiver, 4000)  # Supondo que 4000 seja o tamanho dos dados
             if result is None:
-                # print(f"Comunicação entre sensor {sender} e sensor {receiver} falhou.")
+                print(f"Comunicação entre sensor {sender} e sensor {receiver} falhou.")
                 return None
             
             # Atualiza o total de energia consumida
@@ -247,7 +247,7 @@ class SensorNetwork:
                 return None  
 
         # Se todos os sensores estiverem bem, retorna o total de energia consumida
-        # print(f"Os dados foram transmitidos com sucesso de {start_id} para {end_id}. Gastou-se {total_energy} de energia.")
+        print(f"Os dados foram transmitidos com sucesso de {start_id} para {end_id}. Gastou-se {total_energy} de energia.")
         return total_energy
 
     
@@ -258,45 +258,45 @@ class SensorNetwork:
 
     def run_simulation_agm(self, max_rounds: int = 400, algorithm: str = 'minimum_spanning_tree_prim'):
         for round_num in range(max_rounds):
-            # print(f"\n--- Round {round_num + 1} ---")
+            print(f"\n--- Round {round_num + 1} ---")
 
             start_sensor = self.select_random_sensor()
             end_sensor = 0
 
             path = self.get_shortest_path(start_sensor, end_sensor, algorithm)
             if not path:
-                # print("No path found. Rebuilding the network...")
+                print("No path found. Rebuilding the network...")
                 _, _ = self.minimum_spanning_tree_prim()
                 continue
 
             total_energy = self.simulate_data_transmission(start_sensor, end_sensor, algorithm)
 
             if total_energy is None:
-                # print("Energy depleted on one or more sensors. Rebuilding the network...")
+                print("Energy depleted on one or more sensors. Rebuilding the network...")
                 self.remove_depleted_sensors()
                 _, _ = self.minimum_spanning_tree_prim()
             else:
-                # print(f"Round {round_num + 1} completed successfully.")
-                # print(f"total energy: {total_energy}")
-                # print(f"path: {path}")
+                print(f"Round {round_num + 1} completed successfully.")
+                print(f"total energy: {total_energy}")
+                print(f"path: {path}")
         
     def run_simulation_djikstra(self, algorithm: str = 'dijkstra'):
         for i in range(1, self.qtd_sensors):
             start = i
             end = 0
 
-            # print(self.get_shortest_path(start, end, algorithm))
+            print(self.get_shortest_path(start, end, algorithm))
             total_energy = self.simulate_data_transmission(start, end, algorithm)
 
-            # print(f"Sensor {start} battery: {self.sensors[start].battery}")
-            # print(f"Toal energy consumed: {total_energy}")
+            print(f"Sensor {start} battery: {self.sensors[start].battery}")
+            print(f"Toal energy consumed: {total_energy}")
 
     def remove_depleted_sensors(self):
         sensors_to_remove = []
 
         for sensor_id, sensor in self.sensors.items():
             if sensor.battery <= 0:
-                # print(f"Removendo {sensor_id} devido a bateria esgotada.")
+                print(f"Removendo {sensor_id} devido a bateria esgotada.")
                 sensors_to_remove.append(sensor_id)
         
         for sensor_id in sensors_to_remove:

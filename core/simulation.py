@@ -5,6 +5,7 @@ class Simulation:
     def __init__(self):
         self.network: SensorNetwork = None
         self.current_paths: Dict[int, list] = {}
+
     
     def create_new_simulation(self, dataset_path: str, epochs: int, algorithm: str) -> bool:
         print("Criando nova simulação...")
