@@ -32,7 +32,7 @@ class Screen:
                 if event.key == pygame.K_c:
                     self.simulation.create_new_simulation("data/Cenário 4 - Rede 400.txt", 100, "minimum_spanning_tree_prim")
                 if event.key == pygame.K_SPACE:
-                    self.simulation.next_step()
+                    self.simulation.run_simulation(1)
                 if event.key == pygame.K_DELETE:
                     self.simulation.delete_simulation()
                 if event.key == pygame.K_r:
@@ -96,7 +96,7 @@ class Screen:
         x, y = base_station.position
         screen_x = int(round((x / 1000) * self.screen.get_width()))
         screen_y = int(round((y / 1000) * self.screen.get_height()))
-        pygame.draw.circle(self.screen, (255, 0, 0), (screen_x, screen_y), 8)
+        pygame.draw.circle(self.screen, (0, 0, 255), (screen_x, screen_y), 8)
     
     def draw_paths(self):
         if self.simulation.network is None or not self.display_paths:

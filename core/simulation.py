@@ -26,6 +26,13 @@ class Simulation:
     def delete_simulation(self) -> None:
         self.network = None
         print("Simulação deletada.")
+        
+    def run_simulation(self, steps: int) -> List[Dict[int, List[int]]]:
+        results = []
+        for _ in range(steps):
+            result = self.next_step()
+            results.append(result)
+        return results
 
     def next_step(self) -> Dict[int, List[int]]:
         self.current_epoch += 1

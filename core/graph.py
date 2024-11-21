@@ -135,10 +135,10 @@ class SensorNetwork:
         if sender.battery > transmission_energy and receiver.battery > reception_energy:
             if sender.consume_energy_for_transmission(transmission_energy) and receiver.consume_energy_for_reception(reception_energy):
                 total_energy = transmission_energy + reception_energy
-                print(f"Comunicação realizada com sucesso entre sensor {sender_id} e o sensor {receiver_id}. Consumo total de energia: {total_energy}")
+                # print(f"Comunicação realizada com sucesso entre sensor {sender_id} e o sensor {receiver_id}. Consumo total de energia: {total_energy}")
                 return total_energy
             else:
-                print(f"Comunicação falhou entre o sensor {sender_id} e o sensor {receiver_id} por falta de bateria.")
+                # print(f"Comunicação falhou entre o sensor {sender_id} e o sensor {receiver_id} por falta de bateria.")
                 return None
     
     def dijkstra(self, start_id: int) -> Tuple[Dict[int, float], Dict[int, int]]:
@@ -219,7 +219,7 @@ class SensorNetwork:
             print(f"Sensor {start_id} e Sensor {end_id} não estão conectados.")
             return []
         else:
-            print(f"Menor caminho entre Sensor {start_id} e Sensor {end_id}: {path}. Distância: {distances[end_id]}")
+            # print(f"Menor caminho entre Sensor {start_id} e Sensor {end_id}: {path}. Distância: {distances[end_id]}")
             return path
     
     def simulate_data_transmission(self, start_id: int, end_id: int, path: str) -> Optional[float]:
@@ -247,7 +247,7 @@ class SensorNetwork:
                 return None  
 
         # Se todos os sensores estiverem bem, retorna o total de energia consumida
-        print(f"Os dados foram transmitidos com sucesso de {start_id} para {end_id}. Gastou-se {total_energy} de energia.")
+        # print(f"Os dados foram transmitidos com sucesso de {start_id} para {end_id}. Gastou-se {total_energy} de energia.")
         return total_energy
 
     
